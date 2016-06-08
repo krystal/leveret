@@ -5,8 +5,23 @@ module Leveret
       queue = Leveret.mq_channel.queue('default_queue', persistent: true, auto_delete: false)
       queue.bind(Leveret.mq_exchange, routing_key: 'default')
       queue.subscribe(block: true) do |_, _, msg|
+        fork_and_run(msg)
+      end
+    end
+
+    private
+
+    def fork_and_run(msg)
+      if @child = fork
+        puts "Forked to #{@child}"
+        Process.wait
+      else
         msg = JSON.parse(msg)
-        Object.const_get(msg['job']).new.perform(msg['params'])
+
+        job_klass = Object.const_get(msg['job'])
+        job_klass.new.perform(msg['params'])
+
+        exit
       end
     end
   end

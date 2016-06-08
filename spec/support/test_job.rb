@@ -3,7 +3,8 @@ class TestJob
   on_queue 'default'
 
   def perform(params)
-    puts "AWESOME!"
     puts params.inspect
+    sleep 10
+    puts "AWESOME!"
   end
 end
