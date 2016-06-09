@@ -1,10 +1,10 @@
 class TestJob
   include Leveret::Job
-  on_queue 'default'
+  on_queue 'default', priority: 0
 
   def perform(params)
-    puts params.inspect
-    sleep 10
-    puts "AWESOME!"
+    puts "Starting TestJob #{params.inspect}"
+    sleep 5
+    puts "Done"
   end
 end
