@@ -16,10 +16,13 @@ module Leveret
         @queue_options = { priority: 0 }.merge(opts)
       end
 
-      def queue(params = {})
+      def enqueue(params = {})
         payload = { job: self.name, params: params }
-        Leveret.mq_exchange.publish(serialize_params(payload), persistent: true, routing_key: queue_name,
-          priority: queue_options[:priority])
+        queue.publish(serialize_params(payload), priority: queue_options[:priority])
+      end
+
+      def queue
+        @queue ||= Leveret::Queue.new(queue_name)
       end
 
       def serialize_params(params)

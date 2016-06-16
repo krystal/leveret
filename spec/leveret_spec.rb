@@ -10,12 +10,12 @@ describe Leveret do
   end
 
   it 'can be configured via block' do
-    ampq = "ampq://test-address/"
+    amqp = "ampq://test-address/"
 
     Leveret.configure do |config|
-      config.ampq = ampq
+      config.amqp = amqp
     end
 
-    expect(Leveret.configuration.ampq).to eq(ampq)
+    expect(Leveret.configuration.amqp).to eq(amqp)
   end
 end

@@ -1,6 +1,6 @@
 class TestJob
   include Leveret::Job
-  on_queue 'default', priority: 0
+  on_queue 'standard', priority: 0
 
   def perform(params)
     puts "Starting TestJob #{params.inspect}"

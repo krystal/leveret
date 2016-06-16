@@ -1,11 +1,8 @@
 module Leveret
   class Worker
     def do_work
-      Leveret.mq_channel.prefetch(1)
-      queue = Leveret.mq_channel.queue('default_queue', persistent: true, auto_delete: false, arguments: { 'x-max-priority' => 2 })
-      queue.bind(Leveret.mq_exchange, routing_key: 'default')
-      queue.subscribe(block: true, manual_ack: true) do |delivery_info, properties, msg|
-        Leveret.mq_channel.acknowledge(delivery_info.delivery_tag, false)
+      queue = Leveret::Queue.new
+      queue.subscribe do |_delivery_info, _properties, msg|
         fork_and_run(msg)
       end
     end
