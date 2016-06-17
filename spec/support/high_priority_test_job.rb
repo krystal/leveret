@@ -1,6 +1,6 @@
 class HighPriorityTestJob
   include Leveret::Job
-  on_queue 'standard', priority: 2
+  job_options queue_name: 'standard', priority: :high
 
   def perform(params)
     puts "Starting High Priority Test Job #{params.inspect}"

@@ -9,20 +9,22 @@ module Leveret
     end
 
     module ClassMethods
-      attr_reader :queue_name, :queue_options
+      attr_reader :job_options
 
-      def on_queue(name, opts = {})
-        @queue_name = name
-        @queue_options = { priority: 0 }.merge(opts)
+      def job_options(options = {})
+        @job_options = {
+          queue_name: 'standard',
+          priority: :normal
+        }.merge(options)
       end
 
       def enqueue(params = {})
         payload = { job: self.name, params: params }
-        queue.publish(serialize_params(payload), priority: queue_options[:priority])
+        queue.publish(serialize_params(payload), priority: job_options[:priority])
       end
 
       def queue
-        @queue ||= Leveret::Queue.new(queue_name)
+        @queue ||= Leveret::Queue.new(job_options[:queue_name])
       end
 
       def serialize_params(params)

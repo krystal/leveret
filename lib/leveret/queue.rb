@@ -1,5 +1,7 @@
 module Leveret
   class Queue
+    PRIORITY_MAP = { low: 0, normal: 1, high: 2 }.freeze
+
     attr_accessor :name
 
     def initialize(name = nil)
@@ -7,8 +9,9 @@ module Leveret
     end
 
     def publish(payload, options = {})
-      options = { priority: 0 }.merge(options)
-      exchange.publish(payload, persistent: true, routing_key: name, priority: options[:priority])
+      priority_id = PRIORITY_MAP[options[:priority]] || PRIORITY_MAP[:normal]
+
+      exchange.publish(payload, persistent: true, routing_key: name, priority: priority_id)
     end
 
     def subscribe
