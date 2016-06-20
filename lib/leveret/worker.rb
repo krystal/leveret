@@ -2,7 +2,7 @@ module Leveret
   class Worker
     def do_work
       queue = Leveret::Queue.new
-      queue.subscribe do |_delivery_info, _properties, msg|
+      queue.subscribe do |channel, _delivery_info, _properties, msg|
         fork_and_run(msg)
       end
     end

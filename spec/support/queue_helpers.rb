@@ -1,11 +1,27 @@
 module QueueHelpers
   def test_queue(queue_name = 'test')
-    @queue ||= {}
-    @queue[queue_name] ||= begin
+    queues[queue_name] ||= begin
       queue = channel.queue(Leveret.configuration.queue_name, persistent: true, auto_delete: false,
         arguments: { 'x-max-priority' => 2 })
       queue.bind(exchange, routing_key: queue_name)
       queue
+    end
+  end
+
+  def queues
+    @queues ||= {}
+  end
+
+  def flush_queue(queue_name = 'test')
+    test_queue(queue_name).purge
+  end
+
+  # Blocks until there is a new message on the queue and then returns
+  def get_message_from_queue(queue_name = 'test')
+    queue = test_queue(queue_name)
+    loop do
+      _, _, message = queue.pop
+      return message unless message.nil?
     end
   end
 

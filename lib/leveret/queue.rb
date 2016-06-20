@@ -16,7 +16,7 @@ module Leveret
 
     def subscribe
       queue.subscribe(block: true, manual_ack: true) do |delivery_info, properties, msg|
-        yield(delivery_info, properties, msg)
+        yield(channel, delivery_info, properties, msg) if block_given?
         channel.acknowledge(delivery_info.delivery_tag, false)
       end
     end

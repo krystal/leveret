@@ -10,14 +10,10 @@ describe Leveret::Job do
   end
 
   it 'Can have different priorities', focus: true do
+    expect(TestJob.queue).to receive(:publish).with(anything, priority: :normal)
+    expect(HighPriorityTestJob.queue).to receive(:publish).with(anything, priority: :high)
+
     TestJob.enqueue
     HighPriorityTestJob.enqueue
-
-    # Get two items off of the queue, the first one back should be the high priority job
-    _, _, first_payload = test_queue.pop
-    _, _, second_payload = test_queue.pop
-
-    expect(JSON.parse(first_payload)['job']).to eq('HighPriorityTestJob')
-    expect(JSON.parse(second_payload)['job']).to eq('TestJob')
   end
 end
