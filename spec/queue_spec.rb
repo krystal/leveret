@@ -31,4 +31,6 @@ describe Leveret::Queue do
     expect(second_payload).to eq(normal_priority_payload)
     expect(third_payload).to eq(low_priority_payload)
   end
+
+  it 'can be subscribed to and call a block when a message is received'
 end

@@ -1,9 +1,23 @@
 module Leveret
   class Worker
+    attr_accessor :queues
+
+    def initialize(*queue_names)
+      queue_names = [Leveret.configuration.default_routing_key] if queue_names.empty?
+      self.queues = queue_names.map { |name| Leveret::Queue.new(name) }
+    end
+
     def do_work
-      queue = Leveret::Queue.new
-      queue.subscribe do |channel, _delivery_info, _properties, msg|
-        fork_and_run(msg)
+      subscribe_to_queues.each do |consumer|
+        consumer.channel.work_pool.join
+      end
+    end
+
+    def subscribe_to_queues
+      queues.map do |queue|
+        queue.subscribe do |_delivery_info, _properties, msg|
+          fork_and_run(msg)
+        end
       end
     end
 
@@ -11,13 +25,13 @@ module Leveret
 
     def fork_and_run(msg)
       if @child = fork
-        puts "Forked to #{@child}"
+        Leveret.logger.info "Forked to #{@child}"
         Process.wait
       else
         msg = JSON.parse(msg)
 
         job_klass = Object.const_get(msg['job'])
-        job_klass.new.perform(msg['params'])
+        job_klass.perform(msg['params'])
 
         exit
       end

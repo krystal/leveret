@@ -5,7 +5,7 @@ module Leveret
     attr_accessor :name
 
     def initialize(name = nil)
-      self.name = name || 'standard'
+      self.name = name || Leveret.configuration.default_routing_key
     end
 
     def publish(payload, options = {})
@@ -15,8 +15,8 @@ module Leveret
     end
 
     def subscribe
-      queue.subscribe(block: true, manual_ack: true) do |delivery_info, properties, msg|
-        yield(channel, delivery_info, properties, msg) if block_given?
+      queue.subscribe(manual_ack: true) do |delivery_info, properties, msg|
+        yield(delivery_info, properties, msg) if block_given?
         channel.acknowledge(delivery_info.delivery_tag, false)
       end
     end
