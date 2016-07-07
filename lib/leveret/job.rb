@@ -15,27 +15,29 @@ module Leveret
     end
 
     module ClassMethods
-      attr_reader :options
-
       def perform(serialized_params)
         params = deserialize_params(serialized_params)
         new(params).perform
       end
 
-      def job_options(opts = {})
-        @options = {
+      def set_job_options(opts = {})
+        @job_options = job_options.merge(opts)
+      end
+
+      def job_options
+        @job_options ||= {
           queue_name: Leveret.configuration.default_routing_key,
           priority: :normal
-        }.merge(opts)
+        }
       end
 
       def enqueue(params = {})
         payload = { job: self.name, params: params }
-        queue.publish(serialize_params(payload), priority: options[:priority])
+        queue.publish(serialize_params(payload), priority: job_options[:priority])
       end
 
       def queue
-        @queue ||= Leveret::Queue.new(options[:queue_name])
+        @queue ||= Leveret::Queue.new(job_options[:queue_name])
       end
 
       def serialize_params(params)
