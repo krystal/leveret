@@ -1,0 +1,10 @@
+#!/usr/bin/env ruby
+
+require "bundler/setup"
+require "leveret"
+
+queues = ENV["QUEUES"].to_s.split(',')
+queues << Leveret.configuration.default_routing_key if queues.empty?
+
+worker = Leveret::Worker.new(*queues)
+worker.do_work

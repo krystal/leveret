@@ -22,6 +22,9 @@ describe Leveret::Queue do
     queue.publish(high_priority_payload, priority: :high)
     queue.publish(normal_priority_payload, priority: :normal)
 
+    # Sleep to ensure everything is on the queue
+    sleep 0.5
+
     # As we pop messages off the queue, they should be in the order high, normal, low
     first_payload = get_message_from_queue
     second_payload = get_message_from_queue

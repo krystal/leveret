@@ -8,13 +8,14 @@ module Leveret
     end
 
     def do_work
-      subscribe_to_queues.each do |consumer|
-        consumer.channel.work_pool.join
+      subscribe_to_queues
+      loop do
+        sleep 10
       end
     end
 
     def subscribe_to_queues
-      queues.map do |queue|
+      queues.each do |queue|
         queue.subscribe do |_delivery_info, _properties, msg|
           fork_and_run(msg)
         end
