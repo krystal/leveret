@@ -8,7 +8,7 @@ require 'leveret/queue'
 require 'leveret/worker'
 require "leveret/version"
 
-module Leveret
+module Leveret # :nodoc:
   class << self
     attr_writer :configuration
 
@@ -25,6 +25,19 @@ module Leveret
         conn = Bunny.new(amqp: configuration.amqp)
         conn.start
         conn
+      end
+    end
+
+    def exchange
+      @exchange ||= channel.exchange(Leveret.configuration.exchange_name, type: :direct, durable: true,
+        auto_delete: false)
+    end
+
+    def channel
+      @channel ||= begin
+        chan = Leveret.mq_connection.create_channel
+        chan.prefetch(1)
+        chan
       end
     end
 

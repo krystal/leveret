@@ -1,8 +1,12 @@
 module Leveret
   class Queue
+    extend Forwardable
+
     PRIORITY_MAP = { low: 0, normal: 1, high: 2 }.freeze
 
     attr_accessor :name
+
+    def_delegators :Leveret, :exchange, :channel
 
     def initialize(name = nil)
       self.name = name || Leveret.configuration.default_routing_key
@@ -29,19 +33,6 @@ module Leveret
           arguments: { 'x-max-priority' => 2 })
         queue.bind(exchange, routing_key: name)
         queue
-      end
-    end
-
-    def exchange
-      @exchange ||= channel.exchange(Leveret.configuration.exchange_name, type: :direct, durable: true,
-        auto_delete: false)
-    end
-
-    def channel
-      @channel ||= begin
-        chan = Leveret.mq_connection.create_channel
-        chan.prefetch(1)
-        chan
       end
     end
   end
