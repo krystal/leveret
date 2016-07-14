@@ -4,7 +4,7 @@ describe Leveret::Queue do
   let(:queue) { Leveret::Queue.new('test') }
 
   it 'can publish a payload onto a queue' do
-    payload = "Test Payload"
+    payload = { 'data' => "Test Payload" }
     queue.publish(payload)
 
     # Pop the data off of the queue
@@ -13,9 +13,9 @@ describe Leveret::Queue do
   end
 
   it 'can prioritise message delivery' do
-    high_priority_payload = "High priority payload"
-    normal_priority_payload = "Normal priority payload"
-    low_priority_payload = "Low priority payload"
+    high_priority_payload = { 'data' => "High priority payload" }
+    normal_priority_payload = { 'data' => "Normal priority payload" }
+    low_priority_payload = { 'data' => "Low priority payload" }
 
     # Push messages onto the queue out of order
     queue.publish(low_priority_payload, priority: :low)

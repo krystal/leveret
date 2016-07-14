@@ -21,7 +21,7 @@ module QueueHelpers
     queue = test_queue(queue_name)
     loop do
       _, _, message = queue.pop
-      return message unless message.nil?
+      return JSON.parse(message) unless message.nil?
     end
   end
 
