@@ -1,6 +1,8 @@
 class TestJob
   include Leveret::Job
-  set_job_options queue_name: 'test', priority: :normal
+
+  queue_name 'test'
+  priority :normal
 
   def perform(params)
     puts "Starting TestJob #{params.inspect}"

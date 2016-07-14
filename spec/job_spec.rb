@@ -3,7 +3,7 @@ require 'spec_helper'
 describe Leveret::Job do
   it "Can enqueue a job" do
     params = { one: 1, two: 2 }
-    payload = JSON.dump(job: "TestJob", params: params)
+    payload = { job: "TestJob", params: params }
 
     expect(TestJob.queue).to receive(:publish).with(payload, priority: :normal)
     TestJob.enqueue(one: 1, two: 2)

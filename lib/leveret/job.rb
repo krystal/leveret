@@ -19,8 +19,12 @@ module Leveret
         new(params).perform
       end
 
-      def set_job_options(opts = {})
-        @job_options = job_options.merge(opts)
+      def queue_name(name)
+        job_options[:queue_name] = name
+      end
+
+      def priority(pri)
+        job_options[:priority] = pri
       end
 
       def job_options
