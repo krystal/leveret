@@ -25,8 +25,8 @@ module Leveret
     private
 
     def fork_and_run(msg)
-      if @child = fork
-        Leveret.logger.info "Forked to #{@child}"
+      if child = fork
+        Leveret.logger.info "Forked to #{child}"
         Process.wait
       else
         msg = JSON.parse(msg)
