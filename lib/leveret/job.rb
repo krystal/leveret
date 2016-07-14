@@ -15,8 +15,7 @@ module Leveret
     end
 
     module ClassMethods
-      def perform(serialized_params)
-        params = deserialize_params(serialized_params)
+      def perform(params)
         new(params).perform
       end
 
@@ -33,19 +32,11 @@ module Leveret
 
       def enqueue(params = {})
         payload = { job: self.name, params: params }
-        queue.publish(serialize_params(payload), priority: job_options[:priority])
+        queue.publish(payload, priority: job_options[:priority])
       end
 
       def queue
         @queue ||= Leveret::Queue.new(job_options[:queue_name])
-      end
-
-      def serialize_params(params)
-        JSON.dump(params)
-      end
-
-      def deserialize_params(json)
-        JSON.parse(json)
       end
     end
   end

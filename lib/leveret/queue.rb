@@ -15,17 +15,25 @@ module Leveret
     def publish(payload, options = {})
       priority_id = PRIORITY_MAP[options[:priority]] || PRIORITY_MAP[:normal]
 
-      exchange.publish(payload, persistent: true, routing_key: name, priority: priority_id)
+      exchange.publish(serialize_payload(payload), persistent: true, routing_key: name, priority: priority_id)
     end
 
     def subscribe
       queue.subscribe(manual_ack: true) do |delivery_info, properties, msg|
-        yield(delivery_info, properties, msg) if block_given?
+        yield(delivery_info, properties, deserialize_payload(msg)) if block_given?
         channel.acknowledge(delivery_info.delivery_tag, false)
       end
     end
 
     private
+
+    def serialize_payload(params)
+      JSON.dump(params)
+    end
+
+    def deserialize_payload(json)
+      JSON.parse(json)
+    end
 
     def queue
       @queue ||= begin
