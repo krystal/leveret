@@ -22,8 +22,15 @@ module Leveret
 
     def subscribe
       queue.subscribe(manual_ack: true) do |delivery_info, properties, msg|
-        yield(delivery_info, properties, deserialize_payload(msg)) if block_given?
-        channel.acknowledge(delivery_info.delivery_tag, false)
+        result = yield(delivery_info, properties, deserialize_payload(msg)) if block_given?
+
+        if result == :ack
+          channel.acknowledge(delivery_info.delivery_tag, false)
+        elsif result == :reject
+          channel.reject(delivery_info.delivery_tag)
+        elsif result == :requeue
+          channel.reject(delivery_info.delivery_tag, true)
+        end
       end
     end
 
