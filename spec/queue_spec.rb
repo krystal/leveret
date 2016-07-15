@@ -3,6 +3,10 @@ require 'spec_helper'
 describe Leveret::Queue do
   let(:queue) { Leveret::Queue.new('test') }
 
+  it 'has a name' do
+    expect(queue.name).to eq('test')
+  end
+
   it 'can publish a payload onto a queue' do
     payload = { 'data' => "Test Payload" }
     queue.publish(payload)
@@ -22,7 +26,7 @@ describe Leveret::Queue do
     queue.publish(high_priority_payload, priority: :high)
     queue.publish(normal_priority_payload, priority: :normal)
 
-    # Sleep to ensure everything is on the queue
+    # Ensure everything is on the queue
     sleep 0.5
 
     # As we pop messages off the queue, they should be in the order high, normal, low
@@ -33,6 +37,21 @@ describe Leveret::Queue do
     expect(first_payload).to eq(high_priority_payload)
     expect(second_payload).to eq(normal_priority_payload)
     expect(third_payload).to eq(low_priority_payload)
+  end
+
+  it "won't pick up another queues jobs" do
+    other_queue = Leveret::Queue.new('other_test')
+    payload = { 'data' => 'wotcha' }
+    other_queue.publish(payload)
+
+    # Sleep to ensure everything is on the queue
+    sleep(0.5)
+
+    rtn = get_message_from_queue(queue.name, false)
+    expect(rtn).to be_nil
+
+    rtn = get_message_from_queue(other_queue.name, false)
+    expect(rtn).to eq(payload)
   end
 
   it 'can be subscribed to and call a block when a message is received'

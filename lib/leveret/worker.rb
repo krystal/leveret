@@ -3,7 +3,7 @@ module Leveret
     attr_accessor :queues
 
     def initialize(*queue_names)
-      queue_names = [Leveret.configuration.default_routing_key] if queue_names.empty?
+      queue_names = [Leveret.configuration.default_queue_name] if queue_names.empty?
       self.queues = queue_names.map { |name| Leveret::Queue.new(name) }
     end
 
@@ -29,8 +29,6 @@ module Leveret
         Leveret.logger.info "Forked to #{child}"
         Process.wait
       else
-        msg = JSON.parse(msg)
-
         job_klass = Object.const_get(msg['job'])
         job_klass.perform(msg['params'])
 

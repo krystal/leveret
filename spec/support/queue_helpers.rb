@@ -1,11 +1,11 @@
 module QueueHelpers
+  extend Forwardable
+
+  def_delegators :Leveret, :exchange, :channel
+  def_delegators :channel, :wait_for_confirms
+
   def test_queue(queue_name = 'test')
-    queues[queue_name] ||= begin
-      queue = channel.queue(Leveret.configuration.queue_name, persistent: true, auto_delete: false,
-        arguments: { 'x-max-priority' => 2 })
-      queue.bind(exchange, routing_key: queue_name)
-      queue
-    end
+    queues[queue_name] ||= Leveret::Queue.new(queue_name)
   end
 
   def queues
@@ -17,26 +17,15 @@ module QueueHelpers
   end
 
   # Blocks until there is a new message on the queue and then returns
-  def get_message_from_queue(queue_name = 'test')
+  def get_message_from_queue(queue_name = 'test', block_until_message = true)
     queue = test_queue(queue_name)
     loop do
       _, _, message = queue.pop
-      return JSON.parse(message) unless message.nil?
-    end
-  end
-
-  private
-
-  def exchange
-    @exchange ||= channel.exchange(Leveret.configuration.exchange_name, type: :direct, durable: true,
-      auto_delete: false)
-  end
-
-  def channel
-    @channel ||= begin
-      chan = Leveret.mq_connection.create_channel
-      chan.prefetch(1)
-      chan
+      if message.nil?
+        return unless block_until_message
+      else
+        return JSON.parse(message)
+      end
     end
   end
 end

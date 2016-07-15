@@ -29,7 +29,7 @@ module Leveret
 
       def job_options
         @job_options ||= {
-          queue_name: Leveret.configuration.default_routing_key,
+          queue_name: Leveret.configuration.default_queue_name,
           priority: :normal
         }
       end
