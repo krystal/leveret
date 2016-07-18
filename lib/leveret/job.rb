@@ -1,22 +1,28 @@
 module Leveret
   module Job
-    attr_accessor :params
+    class Requeue < StandardError; end
+    class Reject < StandardError; end
 
-    def initialize(params = {})
-      self.params = params
-    end
+    module InstanceMethods
+      attr_accessor :params
 
-    def perform
-      raise NotImplementedError
-    end
+      def initialize(params = {})
+        self.params = params
+      end
 
-    def self.included(base)
-      base.extend ClassMethods
+      def perform
+        raise NotImplementedError
+      end
     end
 
     module ClassMethods
       def perform(params)
         new(params).perform
+        :success
+      rescue Leveret::Job::Requeue
+        :requeue
+      rescue Leveret::Job::Reject
+        :reject
       end
 
       def queue_name(name)
@@ -35,13 +41,20 @@ module Leveret
       end
 
       def enqueue(params = {})
+        priority = params.delete(:priority) || job_options[:priority]
+
         payload = { job: self.name, params: params }
-        queue.publish(payload, priority: job_options[:priority])
+        queue.publish(payload, priority: priority)
       end
 
       def queue
         @queue ||= Leveret::Queue.new(job_options[:queue_name])
       end
+    end
+
+    def self.included(base)
+      base.extend ClassMethods
+      base.include InstanceMethods
     end
   end
 end

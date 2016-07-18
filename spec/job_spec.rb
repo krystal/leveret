@@ -1,19 +1,75 @@
 require 'spec_helper'
 
 describe Leveret::Job do
-  it "Can enqueue a job" do
-    params = { one: 1, two: 2 }
-    payload = { job: "TestJob", params: params }
+  let(:default_queue_name) { Leveret.configuration.default_queue_name }
+  let(:default_priority) { :normal }
 
-    expect(TestJob.queue).to receive(:publish).with(payload, priority: :normal)
-    TestJob.enqueue(one: 1, two: 2)
+  context "#enqueue" do
+    it 'can be called without params' do
+      expect(TestJob.queue).to receive(:publish).with({ job: "TestJob", params: {} }, priority: default_priority)
+      TestJob.enqueue
+    end
+
+    it 'can be called with params' do
+      params = { one: 1, two: 2 }
+
+      expect(TestJob.queue).to receive(:publish).with({ job: "TestJob", params: params }, priority: default_priority)
+      TestJob.enqueue(one: 1, two: 2)
+    end
+
+    it 'can override the priority of the parent class' do
+      new_priority = :low
+
+      expect(TestJob.queue).to receive(:publish).with({ job: "TestJob", params: {} }, priority: new_priority)
+      TestJob.enqueue(priority: new_priority)
+    end
   end
 
-  it 'Can have different priorities', focus: true do
-    expect(TestJob.queue).to receive(:publish).with(anything, priority: :normal)
-    expect(HighPriorityTestJob.queue).to receive(:publish).with(anything, priority: :high)
+  context '#queue_name' do
+    it 'defaults to the configured default' do
+      expect(DefaultQueueTestJob.job_options[:queue_name]).to eq(default_queue_name)
+      expect(DefaultQueueTestJob.queue.name).to eq(default_queue_name)
+    end
 
-    TestJob.enqueue
-    HighPriorityTestJob.enqueue
+    it 'can be set to another queue' do
+      expect(TestJob.job_options[:queue_name]).to eq('test')
+      expect(TestJob.queue.name).to eq('test')
+    end
+  end
+
+  context '#priority', focus: true do
+    it 'defaults to :normal priority' do
+      expect(TestJob.job_options[:priority]).to eq(default_priority)
+      expect(TestJob.queue).to receive(:publish).with(anything, priority: default_priority)
+      TestJob.enqueue
+    end
+
+    it 'can be set to high' do
+      expect(HighPriorityTestJob.job_options[:priority]).to eq(:high)
+      expect(HighPriorityTestJob.queue).to receive(:publish).with(anything, priority: :high)
+      HighPriorityTestJob.enqueue
+    end
+
+    it 'can be set to low' do
+      expect(LowPriorityTestJob.job_options[:priority]).to eq(:low)
+      expect(LowPriorityTestJob.queue).to receive(:publish).with(anything, priority: :low)
+      LowPriorityTestJob.enqueue
+    end
+  end
+
+  context '#job_options' do
+    it 'returns default configuration options' do
+      expect(DefaultQueueTestJob.job_options).to eq(priority: default_priority, queue_name: default_queue_name)
+    end
+
+    it 'returns configured options' do
+      expect(HighPriorityTestJob.job_options).to eq(priority: :high, queue_name: 'test')
+    end
+  end
+
+  context '#perform' do
+    it 'returns :success for a completed job'
+    it 'returns :requeue for a job that must go back in the queue'
+    it 'returns :reject for a job that will not complete'
   end
 end
