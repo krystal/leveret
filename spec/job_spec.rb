@@ -68,8 +68,16 @@ describe Leveret::Job do
   end
 
   context '#perform' do
-    it 'returns :success for a completed job'
-    it 'returns :requeue for a job that must go back in the queue'
-    it 'returns :reject for a job that will not complete'
+    it 'returns :success for a completed job' do
+      expect(TestJob.perform).to eq(:success)
+    end
+
+    it 'returns :requeue for a job that must go back in the queue' do
+      expect(RequeueTestJob.perform).to eq(:requeue)
+    end
+
+    it 'returns :reject for a job that will not complete' do
+      expect(RejectTestJob.perform).to eq(:reject)
+    end
   end
 end

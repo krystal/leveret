@@ -4,9 +4,8 @@ class HighPriorityTestJob
   queue_name 'test'
   priority :high
 
-  def perform(params)
-    puts "Starting High Priority Test Job #{params.inspect}"
-    sleep 5
-    puts "Done"
+  def perform
+    Leveret.logger.info "Starting High Priority Test Job #{params.inspect}"
+    Leveret.logger.info "Done"
   end
 end

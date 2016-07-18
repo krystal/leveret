@@ -4,9 +4,8 @@ class TestJob
   queue_name 'test'
   priority :normal
 
-  def perform(params)
-    puts "Starting TestJob #{params.inspect}"
-    sleep 5
-    puts "Done"
+  def perform
+    Leveret.logger.info "Starting TestJob #{params.inspect}"
+    Leveret.logger.info "Done"
   end
 end

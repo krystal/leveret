@@ -1,8 +1,23 @@
 module Leveret
+  # Include this module in your job to create a leveret compatible job.
+  # Once included, simply override #perform to do your jobs action.
+  #
+  # To set a different queue name call #queue_name in your class, to set
+  # the default priority call #priority in your class.
+  #
+  # To queue a job simply call #enqueue on the class with the parameters
+  # to be passed. These params will be serialized as JSON in the interim,
+  # so ensure that your params are json-safe.
   module Job
-    class Requeue < StandardError; end
-    class Reject < StandardError; end
+    # Raise this when your job has failed, but try again when a worker is
+    # available again.
+    class RequeueJob < StandardError; end
 
+    # Raise this when your job has failed, but you don't want to requeue it
+    # and try again.
+    class RejectJob < StandardError; end
+
+    # Instance methods to mixin with your job
     module InstanceMethods
       attr_accessor :params
 
@@ -15,13 +30,14 @@ module Leveret
       end
     end
 
+    # Class methods to mixin with your job
     module ClassMethods
-      def perform(params)
+      def perform(params = {})
         new(params).perform
         :success
-      rescue Leveret::Job::Requeue
+      rescue Leveret::Job::RequeueJob
         :requeue
-      rescue Leveret::Job::Reject
+      rescue Leveret::Job::RejectJob
         :reject
       end
 
