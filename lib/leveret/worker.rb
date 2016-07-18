@@ -25,15 +25,24 @@ module Leveret
     private
 
     def fork_and_run(msg)
-      if child = fork
-        Leveret.logger.info "Forked to #{child}"
-        Process.wait
-      else
-        job_klass = Object.const_get(msg['job'])
-        job_klass.perform(msg['params'])
+      read, write = IO.pipe
 
-        exit
+      pid = fork do
+        read.close
+
+        job_klass = Object.const_get(msg['job'])
+        result = job_klass.perform(msg['params'])
+
+        Marshal.dump(result, write)
+
+        exit!(0)
       end
+
+      write.close
+      result = read.read
+      Process.wait(pid)
+
+      Marshal.load(result) unless result.blank?
     end
   end
 end

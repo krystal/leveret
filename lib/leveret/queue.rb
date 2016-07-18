@@ -24,17 +24,21 @@ module Leveret
       queue.subscribe(manual_ack: true) do |delivery_info, properties, msg|
         result = yield(delivery_info, properties, deserialize_payload(msg)) if block_given?
 
-        if result == :ack
-          channel.acknowledge(delivery_info.delivery_tag, false)
-        elsif result == :reject
-          channel.reject(delivery_info.delivery_tag)
-        elsif result == :requeue
-          channel.reject(delivery_info.delivery_tag, true)
-        end
+        ack_message(delivery_info.delivery_tag, result)
       end
     end
 
     private
+
+    def ack_message(delivery_tag, result)
+      if result == :reject
+        channel.reject(delivery_tag)
+      elsif result == :requeue
+        channel.reject(delivery_tag, true)
+      else
+        channel.acknowledge(delivery_tag, false)
+      end
+    end
 
     def serialize_payload(params)
       JSON.dump(params)
