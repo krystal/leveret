@@ -16,7 +16,7 @@ module Leveret
 
     def subscribe_to_queues
       queues.each do |queue|
-        queue.subscribe do |_delivery_info, _properties, msg|
+        queue.subscribe do |msg|
           fork_and_run(msg)
         end
       end

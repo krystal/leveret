@@ -21,8 +21,8 @@ module Leveret
     end
 
     def subscribe
-      queue.subscribe(manual_ack: true) do |delivery_info, properties, msg|
-        result = yield(delivery_info, properties, deserialize_payload(msg)) if block_given?
+      queue.subscribe(manual_ack: true) do |delivery_info, _properties, msg|
+        result = yield(deserialize_payload(msg)) if block_given?
 
         ack_message(delivery_info.delivery_tag, result)
       end

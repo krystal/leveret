@@ -54,5 +54,13 @@ describe Leveret::Queue do
     expect(rtn).to eq(payload)
   end
 
-  it 'can be subscribed to and call a block when a message is received'
+  it 'can be subscribed to and call a block when a message is received' do
+    payload = { 'uniq' => SecureRandom.base64 }
+    expect do |b|
+      consumer = queue.subscribe(&b)
+      queue.publish(payload)
+      sleep(0.5)
+      consumer.cancel
+    end.to yield_with_args(payload)
+  end
 end
