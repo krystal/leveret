@@ -36,7 +36,7 @@ module Leveret
       elsif result == :requeue
         channel.reject(delivery_tag, true)
       else
-        channel.acknowledge(delivery_tag, false)
+        channel.acknowledge(delivery_tag)
       end
     end
 
@@ -49,7 +49,7 @@ module Leveret
     end
 
     def connect_to_queue
-      queue = channel.queue(mq_name, persistent: true, auto_delete: false, arguments: { 'x-max-priority' => 2 })
+      queue = channel.queue(mq_name, durable: true, auto_delete: false, arguments: { 'x-max-priority' => 2 })
       queue.bind(exchange, routing_key: name)
       queue
     end

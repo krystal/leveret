@@ -3,20 +3,113 @@ require 'spec_helper'
 describe Leveret::Queue do
   let(:queue) { Leveret::Queue.new('test') }
 
-  it 'has a name' do
-    expect(queue.name).to eq('test')
+  describe '#name' do
+    it { expect(queue.name).to eq('test') }
   end
 
-  it 'can publish a payload onto a queue' do
-    payload = { 'data' => "Test Payload" }
-    queue.publish(payload)
+  describe '#queue' do
+    it "should be a bunny queue" do
+      expect(queue.queue).to be_a(Bunny::Queue)
+    end
 
-    # Pop the data off of the queue
-    rtn_payload = get_message_from_queue
-    expect(rtn_payload).to eq(payload)
+    it "should be durable" do
+      expect(queue.queue.durable?).to be true
+    end
   end
 
-  it 'can prioritise message delivery' do
+  describe '#publish' do
+    it 'pushes a message onto the exchange' do
+      payload = { 'test' => 'data' }
+      serialized_payload = JSON.dump(payload)
+
+      expect(queue.queue).to receive(:publish).with(serialized_payload, hash_including(routing_key: 'test'))
+      queue.publish(payload)
+    end
+
+    context 'can prioritise message delivery' do
+      it 'sends the correct priority int for high priority' do
+        expect(queue.queue).to receive(:publish).with(anything, hash_including(priority: 2))
+        queue.publish({}, priority: :high)
+      end
+
+      it 'sends the correct priority int for normal priority' do
+        expect(queue.queue).to receive(:publish).with(anything, hash_including(priority: 1))
+        queue.publish({}, priority: :normal)
+      end
+
+      it 'sends the correct priority int for low priority' do
+        expect(queue.queue).to receive(:publish).with(anything, hash_including(priority: 0))
+        queue.publish({}, priority: :low)
+      end
+
+      it 'defaults to normal priority delivery' do
+        expect(queue.queue).to receive(:publish).with(anything, hash_including(priority: 1))
+        queue.publish({})
+      end
+    end
+  end
+
+  describe '#subscribe' do
+    it 'calls a block when a message is received' do
+      payload = { 'uniq' => SecureRandom.base64 }
+      expect do |b|
+        consumer = queue.subscribe(&b)
+        queue.publish(payload)
+        sleep(0.5)
+        consumer.cancel
+      end.to yield_with_args(payload)
+    end
+
+    it 'acknowledges a message when the block returns :success' do
+      expect(queue.channel).to receive(:acknowledge).with(anything)
+
+      consumer = queue.subscribe do
+        :success
+      end
+      queue.publish(test: 'yo')
+
+      sleep(0.5)
+      consumer.cancel
+    end
+
+    it 'rejects a message when the block returns :reject' do
+      expect(queue.channel).to receive(:reject).with(anything)
+
+      consumer = queue.subscribe do
+        :reject
+      end
+      queue.publish(test: 'yo')
+
+      sleep(0.5)
+      consumer.cancel
+    end
+
+    it 'requeues a message when a block returns :requeue' do
+      expect(queue.channel).to receive(:reject).with(anything, true)
+
+      consumer = queue.subscribe do
+        :requeue
+      end
+      queue.publish(test: 'yo')
+
+      sleep(0.5)
+      consumer.cancel
+    end
+
+    it 'only gets called for messages placed on this queue' do
+      other_queue = Leveret::Queue.new('other_test')
+      payload = { 'data' => 'wotcha' }
+
+      expect do |b|
+        consumer = queue.subscribe(&b)
+        other_queue.publish(payload)
+        sleep(0.5)
+        consumer.cancel
+      end.not_to yield_with_args(payload)
+    end
+  end
+
+  it 'receives prioritised messages in the correct order' do
     high_priority_payload = { 'data' => "High priority payload" }
     normal_priority_payload = { 'data' => "Normal priority payload" }
     low_priority_payload = { 'data' => "Low priority payload" }
@@ -37,30 +130,5 @@ describe Leveret::Queue do
     expect(first_payload).to eq(high_priority_payload)
     expect(second_payload).to eq(normal_priority_payload)
     expect(third_payload).to eq(low_priority_payload)
-  end
-
-  it "won't pick up another queues jobs" do
-    other_queue = Leveret::Queue.new('other_test')
-    payload = { 'data' => 'wotcha' }
-    other_queue.publish(payload)
-
-    # Sleep to ensure everything is on the queue
-    sleep(0.5)
-
-    rtn = get_message_from_queue(queue.name, false)
-    expect(rtn).to be_nil
-
-    rtn = get_message_from_queue(other_queue.name, false)
-    expect(rtn).to eq(payload)
-  end
-
-  it 'can be subscribed to and call a block when a message is received' do
-    payload = { 'uniq' => SecureRandom.base64 }
-    expect do |b|
-      consumer = queue.subscribe(&b)
-      queue.publish(payload)
-      sleep(0.5)
-      consumer.cancel
-    end.to yield_with_args(payload)
   end
 end
