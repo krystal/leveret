@@ -4,7 +4,7 @@ describe Leveret::Job do
   let(:default_queue_name) { Leveret.configuration.default_queue_name }
   let(:default_priority) { :normal }
 
-  context "#enqueue" do
+  context ".enqueue" do
     it 'can be called without params' do
       expect(TestJob.queue).to receive(:publish).with({ job: "TestJob", params: {} }, priority: default_priority)
       TestJob.enqueue
@@ -25,7 +25,7 @@ describe Leveret::Job do
     end
   end
 
-  context '#queue_name' do
+  context '.queue_name' do
     it 'defaults to the configured default' do
       expect(DefaultQueueTestJob.job_options[:queue_name]).to eq(default_queue_name)
       expect(DefaultQueueTestJob.queue.name).to eq(default_queue_name)
@@ -37,7 +37,7 @@ describe Leveret::Job do
     end
   end
 
-  context '#priority', focus: true do
+  context '.priority', focus: true do
     it 'defaults to :normal priority' do
       expect(TestJob.job_options[:priority]).to eq(default_priority)
       expect(TestJob.queue).to receive(:publish).with(anything, priority: default_priority)
@@ -57,7 +57,7 @@ describe Leveret::Job do
     end
   end
 
-  context '#job_options' do
+  context '.job_options' do
     it 'returns default configuration options' do
       expect(DefaultQueueTestJob.job_options).to eq(priority: default_priority, queue_name: default_queue_name)
     end
@@ -67,7 +67,7 @@ describe Leveret::Job do
     end
   end
 
-  context '#perform' do
+  context '.perform' do
     it 'returns :success for a completed job' do
       expect(TestJob.perform).to eq(:success)
     end
