@@ -6,7 +6,13 @@ Dir[File.join(File.dirname(__FILE__), 'support/**/*.rb')].each { |f| require f }
 RSpec.configure do |c|
   c.include QueueHelpers
 
-  c.before(:each) do
-    flush_queue
+  c.before(:all) do
+    flush_queue('test')
+    flush_queue('other_test')
+  end
+
+  c.after(:each) do
+    flush_queue('test')
+    flush_queue('other_test')
   end
 end
