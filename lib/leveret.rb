@@ -20,14 +20,6 @@ module Leveret # :nodoc:
       yield(configuration)
     end
 
-    def mq_connection
-      @mq_connection ||= begin
-        conn = Bunny.new(amqp: configuration.amqp)
-        conn.start
-        conn
-      end
-    end
-
     def exchange
       @exchange ||= channel.exchange(Leveret.configuration.exchange_name, type: :direct, durable: true,
         auto_delete: false)
@@ -35,7 +27,7 @@ module Leveret # :nodoc:
 
     def channel
       @channel ||= begin
-        chan = Leveret.mq_connection.create_channel
+        chan = mq_connection.create_channel
         chan.prefetch(1)
         chan
       end
@@ -46,6 +38,16 @@ module Leveret # :nodoc:
         log = Logger.new(configuration.log_file)
         log.level = configuration.log_level
         log
+      end
+    end
+
+    private
+
+    def mq_connection
+      @mq_connection ||= begin
+        conn = Bunny.new(amqp: configuration.amqp)
+        conn.start
+        conn
       end
     end
   end
