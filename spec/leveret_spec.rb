@@ -52,4 +52,16 @@ describe Leveret do
       expect(exchange.auto_delete?).to be false
     end
   end
+
+  describe '.logger' do
+    let(:logger) { Leveret.logger }
+
+    it "is a standard ruby logger" do
+      expect(logger).to be_a(Logger)
+    end
+
+    it "log level matches the configuration" do
+      expect(logger.level).to eq(Leveret.configuration.log_level)
+    end
+  end
 end
