@@ -57,43 +57,7 @@ describe Leveret::Queue do
         queue.publish(payload)
         sleep(0.5)
         consumer.cancel
-      end.to yield_with_args(payload)
-    end
-
-    it 'acknowledges a message when the block returns :success' do
-      expect(queue.channel).to receive(:acknowledge).with(anything)
-
-      consumer = queue.subscribe do
-        :success
-      end
-      queue.publish(test: 'yo')
-
-      sleep(0.5)
-      consumer.cancel
-    end
-
-    it 'rejects a message when the block returns :reject' do
-      expect(queue.channel).to receive(:reject).with(anything)
-
-      consumer = queue.subscribe do
-        :reject
-      end
-      queue.publish(test: 'yo')
-
-      sleep(0.5)
-      consumer.cancel
-    end
-
-    it 'requeues a message when a block returns :requeue' do
-      expect(queue.channel).to receive(:reject).with(anything, true)
-
-      consumer = queue.subscribe do
-        :requeue
-      end
-      queue.publish(test: 'yo')
-
-      sleep(0.5)
-      consumer.cancel
+      end.to yield_with_args(Integer, payload)
     end
 
     it 'only gets called for messages placed on this queue' do

@@ -28,16 +28,6 @@ module Leveret
 
     private
 
-    def ack_message(delivery_tag, result)
-      if result == :reject
-        channel.reject(delivery_tag)
-      elsif result == :requeue
-        channel.reject(delivery_tag, true)
-      else
-        channel.acknowledge(delivery_tag)
-      end
-    end
-
     def serialize_payload(params)
       Leveret::Parameters.new(params).serialize
     end
