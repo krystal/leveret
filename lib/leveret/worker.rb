@@ -33,33 +33,39 @@ module Leveret
 
     def subscribe_to_queues
       queues.map do |queue|
-        consumers << queue.subscribe do |msg|
-          fork_and_run(msg)
+        consumers << queue.subscribe do |delivery_tag, payload|
+          fork_and_run(delivery_tag, payload)
         end
       end
     end
 
-    def fork_and_run(msg)
-      read, write = IO.pipe
-
+    def fork_and_run(delivery_tag, payload)
       pid = fork do
-        read.close
-
         Leveret.configuration.after_fork.call
 
-        job_klass = Object.const_get(msg['job'])
-        result = job_klass.perform(msg['params'])
+        job_klass = Object.const_get(payload['job'])
+        result = job_klass.perform(payload['params'])
 
-        Marshal.dump(result, write)
+        ack_message(delivery_tag, result)
 
         exit!(0)
       end
 
-      write.close
-      result = read.read
       Process.wait(pid)
+    end
 
-      Marshal.load(result) unless result.blank?
+    def channel
+      Leveret.channel
+    end
+
+    def ack_message(delivery_tag, result)
+      if result == :reject
+        channel.reject(delivery_tag)
+      elsif result == :requeue
+        channel.reject(delivery_tag, true)
+      else
+        channel.acknowledge(delivery_tag)
+      end
     end
   end
 end
