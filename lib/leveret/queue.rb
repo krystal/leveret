@@ -39,11 +39,11 @@ module Leveret
     end
 
     def serialize_payload(params)
-      JSON.dump(params)
+      Leveret::Parameters.new(params).serialize
     end
 
     def deserialize_payload(json)
-      JSON.parse(json)
+      Leveret::Parameters.from_json(json)
     end
 
     def connect_to_queue

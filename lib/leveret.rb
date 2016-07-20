@@ -4,6 +4,7 @@ require 'logger'
 
 require 'leveret/configuration'
 require 'leveret/job'
+require 'leveret/parameters'
 require 'leveret/queue'
 require 'leveret/worker'
 require "leveret/version"
