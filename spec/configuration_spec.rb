@@ -10,5 +10,7 @@ describe Leveret::Configuration do
     expect(config.log_file).to eq('/tmp/leveret.log')
     expect(config.log_level).to eq(Logger::DEBUG)
     expect(config.default_queue_name).to eq('standard')
+    expect(config.after_fork).to be_a(Proc)
+    expect(config.error_handler).to be_a(Proc)
   end
 end

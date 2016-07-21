@@ -79,5 +79,14 @@ describe Leveret::Job do
     it 'returns :reject for a job that will not complete' do
       expect(RejectTestJob.perform).to eq(:reject)
     end
+
+    it 'calls an error handler when the job throws an exception' do
+      expect(Leveret.configuration.error_handler).to receive(:call).with(StandardError)
+      ExceptionJob.perform
+    end
+
+    it 'rejects the message when the job throws an exception' do
+      expect(ExceptionJob.perform).to eq(:reject)
+    end
   end
 end

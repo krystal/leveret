@@ -39,6 +39,9 @@ module Leveret
         :requeue
       rescue Leveret::Job::RejectJob
         :reject
+      rescue StandardError => e
+        Leveret.configuration.error_handler.call(e)
+        :reject
       end
 
       def queue_name(name)
