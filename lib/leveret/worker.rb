@@ -19,7 +19,7 @@ module Leveret
           consumers.each(&:cancel)
           break
         end
-        sleep 3
+        sleep 1
       end
     end
 
