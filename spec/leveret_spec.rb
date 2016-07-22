@@ -29,7 +29,7 @@ describe Leveret do
     end
 
     it 'must prefetch only 1 message at a time' do
-      expect(channel.prefetch_count).to eq(1)
+      expect(channel.prefetch_count).to eq(Leveret.configuration.concurrent_fork_count)
     end
   end
 

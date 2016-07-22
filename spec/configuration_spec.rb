@@ -12,5 +12,6 @@ describe Leveret::Configuration do
     expect(config.default_queue_name).to eq('standard')
     expect(config.after_fork).to be_a(Proc)
     expect(config.error_handler).to be_a(Proc)
+    expect(config.concurrent_fork_count).to eq(1)
   end
 end

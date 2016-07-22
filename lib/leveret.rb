@@ -30,7 +30,7 @@ module Leveret # :nodoc:
     def channel
       @channel ||= begin
         chan = mq_connection.create_channel
-        chan.prefetch(1)
+        chan.prefetch(configuration.concurrent_fork_count)
         chan
       end
     end

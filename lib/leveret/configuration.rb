@@ -2,7 +2,7 @@ module Leveret
   # Contains everything needed to configure leveret for work
   class Configuration
     attr_accessor :amqp, :exchange_name, :queue_name_prefix, :log_file, :log_level, :default_queue_name, :after_fork,
-      :error_handler
+      :error_handler, :concurrent_fork_count
 
     def initialize
       assign_defaults
@@ -17,6 +17,7 @@ module Leveret
       self.default_queue_name = 'standard'
       self.after_fork = proc {}
       self.error_handler = proc {}
+      self.concurrent_fork_count = 1
     end
   end
 end

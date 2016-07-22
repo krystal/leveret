@@ -65,7 +65,7 @@ module Leveret
 
     def fork_and_run(delivery_tag, payload)
       pid = fork do
-        log.info "[#{delivery_tag}] Forked to child process #{Process.pid} to run #{payload[:job]}"
+        log.info "[#{delivery_tag}] Forked to child process #{pid} to run #{payload[:job]}"
 
         Leveret.configuration.after_fork.call
 
@@ -73,11 +73,12 @@ module Leveret
         log.info "[#{delivery_tag}] Job returned #{result}"
         ack_message(delivery_tag, result)
 
-        log.info "[#{delivery_tag}] Exiting child process #{Process.pid}"
+        log.info "[#{delivery_tag}] Exiting child process #{pid}"
         exit!(0)
       end
 
-      Process.wait(pid)
+      # Master doesn't need to know how it all went down, the worker will report it's own status back to the queue
+      Process.detach(pid)
     end
 
     def perform_job(payload)
