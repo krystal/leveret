@@ -1,4 +1,5 @@
 module Leveret
+  # Facilitates the publishing or subscribing to a queue
   class Queue
     extend Forwardable
 
