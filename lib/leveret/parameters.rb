@@ -1,14 +1,13 @@
 module Leveret
   # Provides basic indifferent hash access for jobs
   class Parameters
+    extend Forwardable
+
     attr_accessor :params
+    def_delegators :params, :==, :inspect, :to_s
 
     def initialize(params)
       self.params = params || {}
-    end
-
-    def ==(other)
-      params == other
     end
 
     def [](key)

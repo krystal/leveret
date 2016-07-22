@@ -8,7 +8,7 @@ module Leveret
       formatted_time = datetime.strftime("%Y-%m-%d %H:%M:%S") << datetime.usec.to_s[0..2].rjust(3)
       color = SEVERITY_TO_COLOR_MAP[severity]
 
-      "\033[0;37m#{formatted_time}\033[0m [\033[#{color}m#{severity}\033[0m] #{msg2str(msg)} (pid:#{$PID})\n"
+      "\033[0;37m#{formatted_time}\033[0m [\033[#{color}m#{severity}\033[0m] #{msg2str(msg)} (pid:#{Process.pid})\n"
     end
   end
 end

@@ -7,6 +7,10 @@ RSpec.configure do |c|
   c.include QueueHelpers
 
   c.before(:all) do
+    Leveret.configure do |conf|
+      conf.log_level = Logger::ERROR
+    end
+
     flush_queue('test')
     flush_queue('other_test')
   end

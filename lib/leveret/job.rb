@@ -33,13 +33,17 @@ module Leveret
     # Class methods to mixin with your job
     module ClassMethods
       def perform(params = {})
+        log.info "Running #{name} with #{params.to_s}"
         new(params).perform
         :success
       rescue Leveret::Job::RequeueJob
+        log.info "Requeueing job #{name} with #{params}"
         :requeue
       rescue Leveret::Job::RejectJob
+        log.info "Rejecting job #{name} with #{params}"
         :reject
       rescue StandardError => e
+        Leveret.log.error "#{e.message} when processing #{name} with #{params}"
         Leveret.configuration.error_handler.call(e)
         :reject
       end
@@ -63,6 +67,8 @@ module Leveret
         priority = params.delete(:priority) || job_options[:priority]
         q_name = params.delete(:queue_name) || job_options[:queue_name]
 
+        Leveret.log.info "Queuing #{name} to #{q_name} (#{priority}) with #{params}"
+
         payload = { job: self.name, params: params }
         queue(q_name).publish(payload, priority: priority)
       end
@@ -71,6 +77,10 @@ module Leveret
         q_name ||= job_options[:queue_name]
         @queue ||= {}
         @queue[q_name] ||= Leveret::Queue.new(q_name)
+      end
+
+      def log
+        Leveret.log
       end
     end
 
