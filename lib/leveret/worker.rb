@@ -35,6 +35,7 @@ module Leveret
 
     def prepare_for_work
       setup_traps
+      self.process_name = 'leveret-worker-parent'
       start_subscriptions
     end
 
@@ -45,6 +46,10 @@ module Leveret
       trap('TERM') do
         @time_to_die = true
       end
+    end
+
+    def process_name=(name)
+      Process.setproctitle(name)
     end
 
     def start_subscriptions
@@ -65,6 +70,7 @@ module Leveret
 
     def fork_and_run(delivery_tag, payload)
       pid = fork do
+        self.process_name = 'leveret-worker-child'
         log.info "[#{delivery_tag}] Forked to child process #{pid} to run #{payload[:job]}"
 
         Leveret.configuration.after_fork.call
