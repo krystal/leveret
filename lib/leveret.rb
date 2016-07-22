@@ -4,6 +4,7 @@ require 'logger'
 
 require 'leveret/configuration'
 require 'leveret/job'
+require 'leveret/log_formatter'
 require 'leveret/parameters'
 require 'leveret/queue'
 require 'leveret/worker'
@@ -35,10 +36,10 @@ module Leveret # :nodoc:
     end
 
     def log
-      @log ||= begin
-        log = Logger.new(configuration.log_file)
+      @log ||= Logger.new(configuration.log_file).tap do |log|
         log.level = configuration.log_level
-        log
+        log.progname = 'Leveret'
+        log.formatter = Leveret::LogFormatter.new
       end
     end
 
