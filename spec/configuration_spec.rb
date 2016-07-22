@@ -7,7 +7,7 @@ describe Leveret::Configuration do
     expect(config.amqp).to eq("amqp://guest:guest@localhost:5672/")
     expect(config.exchange_name).to eq('leveret_exch')
     expect(config.queue_name_prefix).to eq('leveret_queue')
-    expect(config.log_file).to eq('/tmp/leveret.log')
+    expect(config.log_file).to eq(STDOUT)
     expect(config.log_level).to eq(Logger::DEBUG)
     expect(config.default_queue_name).to eq('standard')
     expect(config.after_fork).to be_a(Proc)
