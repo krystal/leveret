@@ -23,6 +23,14 @@ describe Leveret::Job do
       expect(TestJob.queue).to receive(:publish).with({ job: "TestJob", params: {} }, priority: new_priority)
       TestJob.enqueue(priority: new_priority)
     end
+
+    it 'can override the queue name of the parent class' do
+      new_queue = :other
+      queue = TestJob.queue(new_queue)
+
+      expect(queue).to receive(:publish).with({ job: "TestJob", params: {} }, anything)
+      TestJob.enqueue(queue_name: new_queue)
+    end
   end
 
   context '.queue_name' do

@@ -61,13 +61,16 @@ module Leveret
 
       def enqueue(params = {})
         priority = params.delete(:priority) || job_options[:priority]
+        q_name = params.delete(:queue_name) || job_options[:queue_name]
 
         payload = { job: self.name, params: params }
-        queue.publish(payload, priority: priority)
+        queue(q_name).publish(payload, priority: priority)
       end
 
-      def queue
-        @queue ||= Leveret::Queue.new(job_options[:queue_name])
+      def queue(q_name = nil)
+        q_name ||= job_options[:queue_name]
+        @queue ||= {}
+        @queue[q_name] ||= Leveret::Queue.new(q_name)
       end
     end
 

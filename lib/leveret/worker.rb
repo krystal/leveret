@@ -43,8 +43,8 @@ module Leveret
       pid = fork do
         Leveret.configuration.after_fork.call
 
-        job_klass = Object.const_get(payload['job'])
-        result = job_klass.perform(payload['params'])
+        job_klass = Object.const_get(payload[:job])
+        result = job_klass.perform(Leveret::Parameters.new(payload[:params]))
 
         ack_message(delivery_tag, result)
 
