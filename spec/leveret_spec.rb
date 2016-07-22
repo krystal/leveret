@@ -53,15 +53,15 @@ describe Leveret do
     end
   end
 
-  describe '.logger' do
-    let(:logger) { Leveret.logger }
+  describe '.log' do
+    let(:log) { Leveret.log }
 
-    it "is a standard ruby logger" do
-      expect(logger).to be_a(Logger)
+    it "is a standard ruby log" do
+      expect(log).to be_a(Logger)
     end
 
     it "log level matches the configuration" do
-      expect(logger.level).to eq(Leveret.configuration.log_level)
+      expect(log.level).to eq(Leveret.configuration.log_level)
     end
   end
 end

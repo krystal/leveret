@@ -5,7 +5,7 @@ class TestJob
   priority :normal
 
   def perform
-    Leveret.logger.info "Starting TestJob #{params.inspect}"
-    Leveret.logger.info "Done"
+    Leveret.log.info "Starting TestJob #{params.inspect}"
+    Leveret.log.info "Done"
   end
 end

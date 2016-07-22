@@ -34,8 +34,8 @@ module Leveret # :nodoc:
       end
     end
 
-    def logger
-      @logger ||= begin
+    def log
+      @log ||= begin
         log = Logger.new(configuration.log_file)
         log.level = configuration.log_level
         log

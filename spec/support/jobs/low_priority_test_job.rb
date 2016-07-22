@@ -5,7 +5,7 @@ class HighPriorityTestJob
   priority :high
 
   def perform
-    Leveret.logger.info "Starting High Priority Test Job #{params.inspect}"
-    Leveret.logger.info "Done"
+    Leveret.log.info "Starting High Priority Test Job #{params.inspect}"
+    Leveret.log.info "Done"
   end
 end
