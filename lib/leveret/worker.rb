@@ -1,4 +1,7 @@
 module Leveret
+  # Subscribes to one or more queues and forks workers to perform jobs as they arrive
+  #
+  # Call #do_work to subscribe to all queues and block the main thread.
   class Worker
     extend Forwardable
 
@@ -15,17 +18,12 @@ module Leveret
     end
 
     def do_work
-      log.info "Worker starting for #{queues.map(&:name).join(', ')}"
-      setup_traps
-      subscribe_to_queues
+      log.info "Starting master process for #{queues.map(&:name).join(', ')}"
+      prepare_for_work
 
       loop do
         if @time_to_die
-          log.info "Interrupt received, preparing to exit"
-          consumers.each do |consumer|
-            log.debug "Cancelling consumer on #{consumer.queue.name}"
-            consumer.cancel
-          end
+          cancel_subscriptions
           break
         end
         sleep 1
@@ -35,13 +33,21 @@ module Leveret
 
     private
 
+    def prepare_for_work
+      setup_traps
+      start_subscriptions
+    end
+
     def setup_traps
       trap('INT') do
         @time_to_die = true
       end
+      trap('TERM') do
+        @time_to_die = true
+      end
     end
 
-    def subscribe_to_queues
+    def start_subscriptions
       queues.map do |queue|
         consumers << queue.subscribe do |delivery_tag, payload|
           fork_and_run(delivery_tag, payload)
@@ -49,17 +55,22 @@ module Leveret
       end
     end
 
+    def cancel_subscriptions
+      log.info "Interrupt received, preparing to exit"
+      consumers.each do |consumer|
+        log.debug "Cancelling consumer on #{consumer.queue.name}"
+        consumer.cancel
+      end
+    end
+
     def fork_and_run(delivery_tag, payload)
       pid = fork do
-        Leveret.configuration.after_fork.call
-
         log.info "[#{delivery_tag}] Forked to child process #{Process.pid} to run #{payload[:job]}"
 
-        job_klass = Object.const_get(payload[:job])
-        result = job_klass.perform(Leveret::Parameters.new(payload[:params]))
+        Leveret.configuration.after_fork.call
 
+        result = perform_job(payload)
         log.info "[#{delivery_tag}] Job returned #{result}"
-
         ack_message(delivery_tag, result)
 
         log.info "[#{delivery_tag}] Exiting child process #{Process.pid}"
@@ -67,6 +78,11 @@ module Leveret
       end
 
       Process.wait(pid)
+    end
+
+    def perform_job(payload)
+      job_klass = Object.const_get(payload[:job])
+      job_klass.perform(Leveret::Parameters.new(payload[:params]))
     end
 
     def ack_message(delivery_tag, result)
