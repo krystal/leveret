@@ -17,7 +17,7 @@ module Leveret
     #
     # @option options [Array<String>] queues ([Leveret.configuration.default_queue_name]) A list of queue names for
     #   this worker to subscribe to and process
-    # @option options [Integer] concurret_fork_count (Leveret.configuration.concurrent_fork_count) How many messages
+    # @option options [Integer] concurrent_fork_count (Leveret.configuration.concurrent_fork_count) How many messages
     #   at a time should this worker process?
     def initialize(options = {})
       options = {
