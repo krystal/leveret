@@ -48,6 +48,8 @@ module Leveret
 
     # Create a new instance of this class from a a serialized JSON object.
     #
+    # @param [String] json JSON representation of the parameters we want to access
+    #
     # @return [Parameters] New instance based on the passed JSON
     def self.from_json(json)
       params = JSON.load(json)
