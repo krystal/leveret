@@ -15,7 +15,7 @@ module Leveret
     def_delegators :params, :==, :inspect, :to_s
 
     # @param [Hash] params Hash you wish to access indifferently
-    def initialize(params)
+    def initialize(params = {})
       self.params = params || {}
     end
 
