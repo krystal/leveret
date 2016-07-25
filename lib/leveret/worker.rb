@@ -11,15 +11,23 @@ module Leveret
     #   @return [Array<Bunny::Consumer>] All of the actively subscribed queues
     attr_accessor :queues, :consumers
 
-    def_delegators :Leveret, :log, :channel
+    def_delegators :Leveret, :log, :channel, :configuration
 
     # Create a new worker to process jobs from the list of queue names passed
     #
-    # @param [Array<String>] queue_names A list of queue names for this worker to subscribe to and process
-    def initialize(*queue_names)
-      queue_names = [Leveret.configuration.default_queue_name] if queue_names.empty?
+    # @option options [Array<String>] queues ([Leveret.configuration.default_queue_name]) A list of queue names for
+    #   this worker to subscribe to and process
+    # @option options [Integer] concurret_fork_count (Leveret.configuration.concurrent_fork_count) How many messages
+    #   at a time should this worker process?
+    def initialize(options = {})
+      options = {
+        queues: [configuration.default_queue_name],
+        concurrent_fork_count: [configuration.concurrent_fork_count]
+      }.merge(options)
 
-      self.queues = queue_names.map { |name| Leveret::Queue.new(name) }
+      Leveret.configuration.concurrent_fork_count = options[:concurrent_fork_count]
+
+      self.queues = options[:queues].map { |name| Leveret::Queue.new(name) }
       self.consumers = []
       @time_to_die = false
     end
