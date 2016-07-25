@@ -9,14 +9,17 @@ RSpec.configure do |c|
   c.before(:all) do
     Leveret.configure do |conf|
       conf.log_level = Logger::ERROR
+      conf.queue_name_prefix = 'leveret_test_queue'
+      conf.default_queue_name = 'test'
+      conf.exchange_name = 'leveret_test_exch'
     end
 
     flush_queue('test')
-    flush_queue('other_test')
+    flush_queue('other')
   end
 
   c.after(:each) do
     flush_queue('test')
-    flush_queue('other_test')
+    flush_queue('other')
   end
 end

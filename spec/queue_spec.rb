@@ -61,7 +61,7 @@ describe Leveret::Queue do
     end
 
     it 'only gets called for messages placed on this queue' do
-      other_queue = Leveret::Queue.new('other_test')
+      other_queue = Leveret::Queue.new('other')
       payload = { 'data' => 'wotcha' }
 
       expect do |b|
