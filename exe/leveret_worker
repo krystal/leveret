@@ -3,6 +3,10 @@
 require "bundler/setup"
 require "leveret"
 
+if File.exist?("./config/environment.rb")
+  require File.expand_path("./config/environment.rb")
+end
+
 queues = ENV["QUEUES"].to_s.split(',')
 queues << Leveret.configuration.default_queue_name if queues.empty?
 
