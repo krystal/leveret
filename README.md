@@ -5,6 +5,8 @@ Leveret is an easy to use RabbitMQ backed job runner.
 It's designed specifically to execute long running jobs (multiple hours) while allowing the applicatioin to be
 restarted with no adverse effects on the currently running jobs.
 
+Leveret has been tested with Ruby 2.2.3+ and RabbitMQ 3.5.0+.
+
 ## Installation
 
 Add this line to your application's Gemfile:
@@ -20,6 +22,12 @@ And then execute:
 Or install it yourself as:
 
     $ gem install leveret
+
+To use Leveret you need a running RabbitMQ installation. If you don't have it installed yet, you can do so via
+[Homebrew](https://www.rabbitmq.com/install-homebrew.html) (MacOS), [APT](https://www.rabbitmq.com/install-debian.html)
+(Debian/Ubuntu) or [RPM](https://www.rabbitmq.com/install-rpm.html) (Redhat/Fedora).
+
+RabbitMQ version **3.5.0** or higher is recommended as this is the first version to support message priorities.
 
 ## Usage
 
@@ -65,7 +73,7 @@ class MyOtherQueueJob
   end
 end
 
-MyOtherQueueJob.enqueue
+MyOtherQueueJob.enqueue(test_text: "Hi there! Please write me to the test file.")
 ```
 
 If you don't always want to place the job on your other queue, you can specify the queue name when enqueuing it. Pass
@@ -75,16 +83,9 @@ the `queue_name` option when enqueuing the job.
 MyJob.enqueue(test_text: "Hi there! Please write me to the test file.", queue_name: 'other')
 ```
 
-When starting a worker you can pass multiple queue names as a comma separated list. We'll start a worker that will
-process jobs on the standard queue, and the new `other` queue.
-
-```bash
-bundle exec leveret_worker QUEUES=standard,other
-```
-
 ### Priorities
 
-Leveret supports 3 levels of job priority, `low`, `normal` and `high`. To set the priority you can define it in your
+Leveret supports 3 levels of job priority, `:low`, `:normal` and `:high`. To set the priority you can define it in your
 job class, or specify it at enqueue time by passing the `priority` option.
 
 ```ruby
@@ -99,10 +100,91 @@ class MyHighPriorityMyJob
 end
 
 MyHighPriorityJob.enqueue
+```
 
-# or...
+To specify priority at enqueue time:
 
-MyJob.enqueue(priority: :high)
+```ruby
+MyJob.enqueue(test_text: "Hi there! Please write me to the test file.", priority: :high)
+```
+
+### Workers
+
+To start a leveret worker, simply run the `leveret_worker` executable included in the gem. Started with no arguments it
+will create a worker monitoring the default queue and process one job at a time.
+
+Changing the queues that a worker monitors requires passing a comma separated list of queue names in the environment
+variable `QUEUES`. The example below watches for jobs on the queues `standard` and `other`.
+
+```bash
+bundle exec leveret_worker QUEUES=standard,other
+```
+
+By default, workers will only process one job at a time. For each job that is executed, a child process is forked, and
+the job run in the new process. When the job completes, the fork exits. We can process more jobs simultaniously simply
+by allowing more forks to run. To increase this limit set the `PROCESSES` environment variable. There is no limit to
+this variable in Leveret, but you should be aware of your own OS and resource limits.
+
+```bash
+bundle exec leveret_worker PROCESSES=5
+```
+
+## Configuration
+
+Configuration in Leveret is done via a configure block. In a Rails application it is recommended you place your
+configuration in `config/initializers/leveret.rb`. Leveret comes configured with sane defaults for development, but you
+may wish to change some for production use.
+
+```ruby
+Leveret.configure do |config|
+  # Location of your RabbitMQ server
+  config.amqp = "amqp://guest:guest@localhost:5672/"
+  # Name of the exchange Levert will create on RabbitMQ
+  config.exchange_name = 'leveret_exch'
+  # Path to send log output to
+  config.log_file = STDOUT
+  # Verbosity of log output
+  config.log_level = Logger::DEBUG
+  # String that is prepended to all queues created in RabbitMQ
+  config.queue_name_prefix = 'leveret_queue'
+  # Name of the queue to use if none other is specified
+  config.default_queue_name = 'standard'
+  # A block that should be called every time a child fork is created to process a job
+  config.after_fork = proc {}
+  # A block that is called whenever an exception occurs in a job
+  config.error_handler = proc { |ex| ex }
+  # The default number of jobs to process simultaniously, this can be overridden by the PROCESSES
+  # environment variable when starting a worker
+  config.concurrent_fork_count = 1
+end
+```
+
+Most of these are pretty self-explanatory and can be left to their default values, however `after_fork` and
+`error_handler` could use a little more explaining.
+
+`after_fork` Is called immediately after a child process is forked to run a job. Any connections that need to be
+reinitialized on fork should be done so here. For example, if you're using Rails you'll probably want to reconnect
+to ActiveRecord here:
+
+```ruby
+Leveret.configure do |config|
+  config.after_fork = proc do
+    ActiveRecord::Base.establish_connection
+  end
+end
+```
+
+`error_handler` is called whenever an exception is raised in your job. These exceptions are caught and logged, but not
+raised afterwards. `error_handler` is your chance to decide what to do with these exceptions. You may wish to log them
+using a service such as [Airbrake](https://airbrake.io/) or [Sentry](https://getsentry.com/welcome/). To configure an
+error handler to log to Sentry the following would be necessary:
+
+```ruby
+Leveret.configure do |config|
+  config.error_handler = proc do |exception|
+    Raven.capture_exception(exception, tags: {component: 'leveret'})
+  end
+end
 ```
 
 ## Development
@@ -113,7 +195,7 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/leveret.
+Bug reports and pull requests are welcome on GitHub at https://github.com/darkphnx/leveret.
 
 
 ## License
