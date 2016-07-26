@@ -4,7 +4,7 @@ require "bundler/setup"
 require "leveret"
 
 queues = ENV["QUEUES"].to_s.split(',')
-queue_names << Leveret.configuration.default_routing_key if queues.empty?
+queues << Leveret.configuration.default_queue_name if queues.empty?
 
 concurrent_fork_count = ENV["PROCESSES"] || Leveret.configuration.concurrent_fork_count
 
