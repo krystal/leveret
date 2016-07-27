@@ -113,21 +113,23 @@ MyJob.enqueue(test_text: "Hi there! Please write me to the test file.", priority
 To start a leveret worker, simply run the `leveret_worker` executable included in the gem. Started with no arguments it
 will create a worker monitoring the default queue and process one job at a time.
 
-Changing the queues that a worker monitors requires passing a comma separated list of queue names in the environment
-variable `QUEUES`. The example below watches for jobs on the queues `standard` and `other`.
+Changing the queues that a worker monitors requires passing a comma separated list of queue names in the option
+`--queues`. The example below watches for jobs on the queues `standard` and `other`.
 
 ```bash
-bundle exec leveret_worker QUEUES=standard,other
+bundle exec leveret_worker --queues standard,other
 ```
 
 By default, workers will only process one job at a time. For each job that is executed, a child process is forked, and
 the job run in the new process. When the job completes, the fork exits. We can process more jobs simultaniously simply
-by allowing more forks to run. To increase this limit set the `PROCESSES` environment variable. There is no limit to
+by allowing more forks to run. To increase this limit set the `--processes` option. There is no limit to
 this variable in Leveret, but you should be aware of your own OS and resource limits.
 
 ```bash
-bundle exec leveret_worker PROCESSES=5
+bundle exec leveret_worker --processes 5
 ```
+
+It's also possible to set the log level and output from the command line, call up `--help` for more details.
 
 ## Configuration
 

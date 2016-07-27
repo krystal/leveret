@@ -15,19 +15,12 @@ module Leveret
 
     # Create a new worker to process jobs from the list of queue names passed
     #
-    # @option options [Array<String>] queues ([Leveret.configuration.default_queue_name]) A list of queue names for
-    #   this worker to subscribe to and process
-    # @option options [Integer] concurrent_fork_count (Leveret.configuration.concurrent_fork_count) How many messages
-    #   at a time should this worker process?
-    def initialize(options = {})
-      options = {
-        queues: [configuration.default_queue_name],
-        concurrent_fork_count: [configuration.concurrent_fork_count]
-      }.merge(options)
+    # @param [Array<String>] queue_names ([Leveret.configuration.default_queue_name]) A list of queue names for this
+    #   worker to subscribe to and process
+    def initialize(*queue_names)
+      queue_names << configuration.default_queue_name if queue_names.empty?
 
-      Leveret.configuration.concurrent_fork_count = options[:concurrent_fork_count]
-
-      self.queues = options[:queues].map { |name| Leveret::Queue.new(name) }
+      self.queues = queue_names.map { |name| Leveret::Queue.new(name) }
       self.consumers = []
       @time_to_die = false
     end

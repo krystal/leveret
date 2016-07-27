@@ -2,15 +2,10 @@
 
 require "bundler/setup"
 require "leveret"
+require "leveret/cli"
 
 if File.exist?("./config/environment.rb")
   require File.expand_path("./config/environment.rb")
 end
 
-queues = ENV["QUEUES"].to_s.split(',')
-queues << Leveret.configuration.default_queue_name if queues.empty?
-
-concurrent_fork_count = ENV["PROCESSES"] || Leveret.configuration.concurrent_fork_count
-
-worker = Leveret::Worker.new(queues: queues, concurrent_fork_count: concurrent_fork_count)
-worker.do_work
+Leveret::CLI.new(ARGV)
