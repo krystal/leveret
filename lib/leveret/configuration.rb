@@ -34,7 +34,7 @@ module Leveret
     private
 
     def assign_defaults
-      self.amqp = "amqp://guest:guest@localhost:5672/"
+      self.amqp = "amqp://guest:guest@localhost:5672"
       self.exchange_name = 'leveret_exch'
       self.log_file = STDOUT
       self.log_level = Logger::DEBUG

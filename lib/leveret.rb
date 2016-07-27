@@ -69,7 +69,7 @@ module Leveret
 
     def mq_connection
       @mq_connection ||= begin
-        conn = Bunny.new(amqp: configuration.amqp)
+        conn = Bunny.new(configuration.amqp)
         conn.start
         conn
       end
