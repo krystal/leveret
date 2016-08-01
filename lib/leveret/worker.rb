@@ -11,7 +11,7 @@ module Leveret
     #   @return [Array<Bunny::Consumer>] All of the actively subscribed queues
     attr_accessor :queues, :consumers
 
-    def_delegators :Leveret, :log, :channel, :configuration
+    def_delegators :Leveret, :log, :configuration
 
     # Create a new worker to process jobs from the list of queue names passed
     #
@@ -69,8 +69,8 @@ module Leveret
     # allow us to gracefully cancel these subscriptions when we need to quit.
     def start_subscriptions
       queues.map do |queue|
-        consumers << queue.subscribe do |delivery_tag, payload|
-          fork_and_run(delivery_tag, payload)
+        consumers << queue.subscribe do |channel, delivery_tag, payload|
+          fork_and_run(channel, delivery_tag, payload)
         end
       end
     end
@@ -88,19 +88,21 @@ module Leveret
     # Detach the main process from the child so we can return to the main loop without waiting for it to finish
     # processing the job.
     #
+    # @param [Bunny::Channel] channel RabbitMQ channel to send the ack message on
     # @param [String] delivery_tag The identifier that RabbitMQ uses to track the message. This will be used to ack
     #   or reject the message after processing.
     # @param [Parameters] payload The job name and parameters the job requires
-    def fork_and_run(delivery_tag, payload)
+    def fork_and_run(channel, delivery_tag, payload)
       pid = fork do
         self.process_name = 'leveret-worker-child'
         log.info "[#{delivery_tag}] Forked to child process #{pid} to run #{payload[:job]}"
 
+        Leveret.reset_connection!
         Leveret.configuration.after_fork.call
 
         result = perform_job(payload)
         log.info "[#{delivery_tag}] Job returned #{result}"
-        ack_message(delivery_tag, result)
+        ack_message(channel, delivery_tag, result)
 
         log.info "[#{delivery_tag}] Exiting child process #{pid}"
         exit!(0)
@@ -121,10 +123,11 @@ module Leveret
 
     # Sends a message back to RabbitMQ confirming the completed execution of the message
     #
+    # @param [Bunny::Channel] channel RabbitMQ channel to send the ack message on
     # @param [String] delivery_tag The identifier that RabbitMQ uses to track the message. This will be used to ack
     #   or reject the message after processing.
     # @param [Symbol] result :success, :reject or :requeue depending on how we want to acknowledge the message
-    def ack_message(delivery_tag, result)
+    def ack_message(channel, delivery_tag, result)
       if result == :reject
         log.debug "[#{delivery_tag}] Rejecting message"
         channel.reject(delivery_tag)

@@ -54,6 +54,11 @@ module Leveret
       end
     end
 
+    def reset_connection!
+      @mq_connection = nil
+      @channel = nil
+    end
+
     # Logger used throughout Leveret, see {Configuration} for config options.
     #
     # @return [Logger] Standard ruby logger
