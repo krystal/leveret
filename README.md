@@ -183,8 +183,9 @@ error handler to log to Sentry the following would be necessary:
 
 ```ruby
 Leveret.configure do |config|
-  config.error_handler = proc do |exception|
-    Raven.capture_exception(exception, tags: {component: 'leveret'})
+  config.error_handler = proc do |exception, job|
+    job_name = job.class.name
+    Raven.capture_exception(exception, tags: {component: job_name})
   end
 end
 ```

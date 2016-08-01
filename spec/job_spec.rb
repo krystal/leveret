@@ -89,7 +89,7 @@ describe Leveret::Job do
     end
 
     it 'calls an error handler when the job throws an exception' do
-      expect(Leveret.configuration.error_handler).to receive(:call).with(StandardError)
+      expect(Leveret.configuration.error_handler).to receive(:call).with(StandardError, instance_of(ExceptionJob))
       ExceptionJob.perform
     end
 

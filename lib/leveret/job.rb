@@ -72,7 +72,7 @@ module Leveret
         :reject
       rescue StandardError => e
         Leveret.log.error "#{e.message} when processing #{self.class.name} with #{params}"
-        Leveret.configuration.error_handler.call(e)
+        Leveret.configuration.error_handler.call(e, self)
         :reject
       end
 
