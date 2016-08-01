@@ -53,6 +53,7 @@ module Leveret
     #
     # @note The receiving block is responsible for acking/rejecting the message. Please see the note for more details.
     #
+    # @yieldparam channel [Bunny::Channel] RabbitMQ channel receiver should use to send ack/reject
     # @yieldparam delivery_tag [String] The identifier for this message that must be used do ack/reject the message
     # @yieldparam payload [Parameters] A deserialized version of the payload contained in the message
     #
@@ -61,7 +62,7 @@ module Leveret
       log.info "Subscribing to #{name}"
       queue.subscribe(manual_ack: true) do |delivery_info, _properties, msg|
         log.debug "Received #{msg} from #{name}"
-        yield(delivery_info.delivery_tag, deserialize_payload(msg))
+        yield(queue.channel, delivery_info.delivery_tag, deserialize_payload(msg))
       end
     end
 

@@ -57,7 +57,7 @@ describe Leveret::Queue do
         queue.publish(payload)
         sleep(0.5)
         consumer.cancel
-      end.to yield_with_args(Integer, payload)
+      end.to yield_with_args(queue.channel, Integer, payload)
     end
 
     it 'only gets called for messages placed on this queue' do
