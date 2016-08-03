@@ -17,7 +17,7 @@ module Leveret
     # @param [Message] A message received and processed already
     def republish(message)
       delay_exchange.publish(message.params.serialize, expiration: configuration.delay_time, persistent: true,
-        routing_key: message.delivery_info.routing_key, priority: message.properties.priority)
+        routing_key: message.routing_key, priority: message.priority)
     end
 
     private
