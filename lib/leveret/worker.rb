@@ -92,7 +92,8 @@ module Leveret
     def fork_and_run(incoming_message)
       pid = fork do
         self.process_name = 'leveret-worker-child'
-        log.info "[#{incoming_message.delivery_tag}] Forked to child process #{pid} to run #{payload[:job]}"
+        log.info "[#{incoming_message.delivery_tag}] Forked to child process #{pid} to run" \
+          "#{incoming_message.params[:job]}"
 
         Leveret.reset_connection!
         Leveret.configuration.after_fork.call
