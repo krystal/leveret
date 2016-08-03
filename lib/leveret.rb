@@ -3,10 +3,12 @@ require 'json'
 require 'logger'
 
 require 'leveret/configuration'
+require 'leveret/delay_queue'
 require 'leveret/job'
 require 'leveret/log_formatter'
 require 'leveret/parameters'
 require 'leveret/queue'
+require 'leveret/result_handler'
 require 'leveret/worker'
 require "leveret/version"
 
@@ -54,9 +56,14 @@ module Leveret
       end
     end
 
+    def delay_queue
+      @delay_queue ||= Leveret::DelayQueue.new
+    end
+
     def reset_connection!
       @mq_connection = nil
       @channel = nil
+      @delay_queue = nil
     end
 
     # Logger used throughout Leveret, see {Configuration} for config options.

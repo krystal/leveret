@@ -36,13 +36,14 @@ module Leveret
   #   MyJob.enqueue(test_text: "Hi there, please write this different text to the file", queue_name: 'other_queue')
   #
   module Job
-    # Raise this when your job has failed, but try again when a worker is
-    # available again.
+    # Raise this when your job has failed, but try again as soon as another worker is available.
     class RequeueJob < StandardError; end
 
-    # Raise this when your job has failed, but you don't want to requeue it
-    # and try again.
+    # Raise this when your job has failed, but you don't want to requeue it and try again.
     class RejectJob < StandardError; end
+
+    # Raise thie when you want your job to be executed later (later is defined in {Leveret.configuration.delay_time})
+    class DelayJob < StandardError; end
 
     # Instance methods to mixin with your job
     module InstanceMethods
@@ -59,7 +60,7 @@ module Leveret
 
       # Runs the job and captures any exceptions to turn them into symbols which represent the status of the job
       #
-      # @return [Symbol] :success, :requeue, :reject depending on job success
+      # @return [Symbol] :success, :requeue, :reject, :delay depending on job success
       def run
         Leveret.log.info "Running #{self.class.name} with #{params}"
         perform
@@ -70,6 +71,9 @@ module Leveret
       rescue Leveret::Job::RejectJob
         Leveret.log.warn "Rejecting job #{self.class.name} with #{params}"
         :reject
+      rescue Leveret::Job::DelayJob
+        Leveret.log.warn "Delaying job #{self.class.name} with #{params}"
+        :delay
       rescue StandardError => e
         Leveret.log.error "#{e.message} when processing #{self.class.name} with #{params}"
         Leveret.configuration.error_handler.call(e, self)

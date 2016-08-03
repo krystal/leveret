@@ -41,7 +41,7 @@ module Leveret
       payload = serialize_payload(payload)
 
       log.debug "Publishing #{payload.inspect} for queue #{name} (Priority: #{priority_id})"
-      queue.publish(payload, persistent: true, routing_key: name, priority: priority_id)
+      exchange.publish(payload, persistent: true, routing_key: name, priority: priority_id)
     end
 
     # Subscribe to this queue and yield a block for every message received. This method does not block, receiving and
@@ -53,16 +53,17 @@ module Leveret
     #
     # @note The receiving block is responsible for acking/rejecting the message. Please see the note for more details.
     #
-    # @yieldparam channel [Bunny::Channel] RabbitMQ channel receiver should use to send ack/reject
-    # @yieldparam delivery_tag [String] The identifier for this message that must be used do ack/reject the message
+    # @yieldparam [Bunny::DeliveryInfo] delivery_info Contains incoming channel, queue, delivery tag etc. needed
+    #   for acking
+    # @yieldparam [Bunny::MessageProperties] properties Contains priority information incase we need to requeue
     # @yieldparam payload [Parameters] A deserialized version of the payload contained in the message
     #
     # @return [void]
     def subscribe
       log.info "Subscribing to #{name}"
-      queue.subscribe(manual_ack: true) do |delivery_info, _properties, msg|
+      queue.subscribe(manual_ack: true) do |delivery_info, properties, msg|
         log.debug "Received #{msg} from #{name}"
-        yield(queue.channel, delivery_info.delivery_tag, deserialize_payload(msg))
+        yield(delivery_info, properties, deserialize_payload(msg))
       end
     end
 

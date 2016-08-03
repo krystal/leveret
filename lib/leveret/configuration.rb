@@ -9,6 +9,16 @@ module Leveret
   # @!attribute queue_name_prefix
   #   @return [String] This value will be prefixed to all queues created on your RabbitMQ instance.
   #     Default: +"leveret_queue"+
+  # @!attribute delay_exchange_name
+  #   @return [String] Name of the exchange for Leveret to publish to that should be processed later.
+  #     Default: +"leveret_delay_exch"+
+  # @!attribute delay_queue_name
+  #   @return [String] Name of the queue for Leveret to use to store messages that should be processed later.
+  #     Default: +"leveret_delay_queue"+
+  # @!attribute delay_time
+  #   @return [Integer] Amount of time a delayed message should say on the delay queue in milliseconds Default: +10000+
+  # @!attribute delay_exchange_name
+  #   @return [String] Name of the exchange for Leveret to publish messages to. Default: +"leveret_exch"+
   # @!attribute log_file
   #   @return [String] The path where logfiles should be written to. Default: +STDOUT+
   # @!attribute log_level
@@ -24,7 +34,7 @@ module Leveret
   #   @return [Integer] The number of jobs that can be processes simultanously. Default: +1+
   class Configuration
     attr_accessor :amqp, :exchange_name, :queue_name_prefix, :log_file, :log_level, :default_queue_name, :after_fork,
-      :error_handler, :concurrent_fork_count
+      :error_handler, :concurrent_fork_count, :delay_exchange_name, :delay_queue_name, :delay_time
 
     # Create a new instance of Configuration with a set of sane defaults.
     def initialize
@@ -40,6 +50,9 @@ module Leveret
       self.log_level = Logger::DEBUG
       self.queue_name_prefix = 'leveret_queue'
       self.default_queue_name = 'standard'
+      self.delay_exchange_name = 'leveret_delay_exch'
+      self.delay_queue_name = 'leveret_delay_queue'
+      self.delay_time = 10_000
       self.after_fork = proc {}
       self.error_handler = proc { |ex| ex }
       self.concurrent_fork_count = 1
