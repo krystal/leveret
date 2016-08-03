@@ -2,6 +2,7 @@ require 'spec_helper'
 
 describe Leveret::Queue do
   let(:queue) { Leveret::Queue.new('test') }
+  let(:exchange) { Leveret.exchange }
 
   describe '#name' do
     it { expect(queue.name).to eq('test') }
@@ -22,28 +23,28 @@ describe Leveret::Queue do
       payload = { 'test' => 'data' }
       serialized_payload = JSON.dump(payload)
 
-      expect(queue.queue).to receive(:publish).with(serialized_payload, hash_including(routing_key: 'test'))
+      expect(exchange).to receive(:publish).with(serialized_payload, hash_including(routing_key: 'test'))
       queue.publish(payload)
     end
 
     context 'can prioritise message delivery' do
       it 'sends the correct priority int for high priority' do
-        expect(queue.queue).to receive(:publish).with(anything, hash_including(priority: 2))
+        expect(exchange).to receive(:publish).with(anything, hash_including(priority: 2))
         queue.publish({}, priority: :high)
       end
 
       it 'sends the correct priority int for normal priority' do
-        expect(queue.queue).to receive(:publish).with(anything, hash_including(priority: 1))
+        expect(exchange).to receive(:publish).with(anything, hash_including(priority: 1))
         queue.publish({}, priority: :normal)
       end
 
       it 'sends the correct priority int for low priority' do
-        expect(queue.queue).to receive(:publish).with(anything, hash_including(priority: 0))
+        expect(exchange).to receive(:publish).with(anything, hash_including(priority: 0))
         queue.publish({}, priority: :low)
       end
 
       it 'defaults to normal priority delivery' do
-        expect(queue.queue).to receive(:publish).with(anything, hash_including(priority: 1))
+        expect(exchange).to receive(:publish).with(anything, hash_including(priority: 1))
         queue.publish({})
       end
     end
