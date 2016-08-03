@@ -69,8 +69,8 @@ module Leveret
     # allow us to gracefully cancel these subscriptions when we need to quit.
     def start_subscriptions
       queues.map do |queue|
-        consumers << queue.subscribe do |channel, delivery_tag, payload|
-          fork_and_run(channel, delivery_tag, payload)
+        consumers << queue.subscribe do |incoming_message|
+          fork_and_run(incoming_message)
         end
       end
     end
@@ -88,22 +88,20 @@ module Leveret
     # Detach the main process from the child so we can return to the main loop without waiting for it to finish
     # processing the job.
     #
-    # @param [Bunny::DeliveryInfo] delivery_info Contains incoming channel, queue, delivery tag etc. needed for acking
-    # @param [Bunny::MessageProperties] properties Contains priority information incase we need to requeue
-    # @param [Parameters] payload The job name and parameters the job requires
-    def fork_and_run(delivery_info, properties, payload)
+    # @param [Message] payload Message meta and payload to process
+    def fork_and_run(incoming_message)
       pid = fork do
         self.process_name = 'leveret-worker-child'
-        log.info "[#{delivery_info.delivery_tag}] Forked to child process #{pid} to run #{payload[:job]}"
+        log.info "[#{incoming_message.delivery_tag}] Forked to child process #{pid} to run #{payload[:job]}"
 
         Leveret.reset_connection!
         Leveret.configuration.after_fork.call
 
-        result = perform_job(payload)
-        result_handler = Leveret::ResultHandler.new(delivery_info, properties, payload)
+        result = perform_job(incoming_message.params)
+        result_handler = Leveret::ResultHandler.new(incoming_message)
         result_handler.handle(result)
 
-        log.info "[#{delivery_info.delivery_tag}] Exiting child process #{pid}"
+        log.info "[#{incoming_message.delivery_tag}] Exiting child process #{pid}"
         exit!(0)
       end
 

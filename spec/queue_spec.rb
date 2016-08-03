@@ -58,7 +58,7 @@ describe Leveret::Queue do
         queue.publish(payload)
         sleep(0.5)
         consumer.cancel
-      end.to yield_with_args(instance_of(Bunny::DeliveryInfo), instance_of(Bunny::MessageProperties), payload)
+      end.to yield_with_args(instance_of(Leveret::Message))
     end
 
     it 'only gets called for messages placed on this queue' do

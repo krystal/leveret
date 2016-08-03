@@ -53,17 +53,15 @@ module Leveret
     #
     # @note The receiving block is responsible for acking/rejecting the message. Please see the note for more details.
     #
-    # @yieldparam [Bunny::DeliveryInfo] delivery_info Contains incoming channel, queue, delivery tag etc. needed
-    #   for acking
-    # @yieldparam [Bunny::MessageProperties] properties Contains priority information incase we need to requeue
-    # @yieldparam payload [Parameters] A deserialized version of the payload contained in the message
+    # @yieldparam incoming [Message] Delivery info, properties and the params wrapped up into a convenient object
     #
     # @return [void]
     def subscribe
       log.info "Subscribing to #{name}"
       queue.subscribe(manual_ack: true) do |delivery_info, properties, msg|
         log.debug "Received #{msg} from #{name}"
-        yield(delivery_info, properties, deserialize_payload(msg))
+        incoming = Leveret::Message.new(delivery_info, properties, deserialize_payload(msg))
+        yield incoming
       end
     end
 

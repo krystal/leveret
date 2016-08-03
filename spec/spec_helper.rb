@@ -12,6 +12,8 @@ RSpec.configure do |c|
       conf.queue_name_prefix = 'leveret_test_queue'
       conf.default_queue_name = 'test'
       conf.exchange_name = 'leveret_test_exch'
+      conf.delay_exchange_name = 'leveret_test_delay_exchange'
+      conf.delay_queue_name = 'leveret_test_delay_queue'
     end
 
     flush_queue('test')

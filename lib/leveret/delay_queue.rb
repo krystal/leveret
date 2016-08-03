@@ -13,9 +13,11 @@ module Leveret
     end
 
     # Place a message onto the delay queue, which will later be expired and sent back to the main exchange
-    def republish(delivery_info, properties, params)
-      delay_exchange.publish(params.serialize, expiration: configuration.delay_time, persistent: true,
-        routing_key: delivery_info.routing_key, priority: properties.priority)
+    #
+    # @param [Message] A message received and processed already
+    def republish(message)
+      delay_exchange.publish(message.params.serialize, expiration: configuration.delay_time, persistent: true,
+        routing_key: message.delivery_info.routing_key, priority: message.properties.priority)
     end
 
     private

@@ -3,18 +3,13 @@ module Leveret
   class ResultHandler
     extend Forwardable
 
-    attr_accessor :delivery_info, :properties, :params
+    attr_accessor :incoming_message
 
-    def_delegators :delivery_info, :channel, :delivery_tag
     def_delegators :Leveret, :log, :delay_queue
 
-    # @param [Bunny::DeliveryInfo] delivery_info Contains incoming channel, queue, delivery tag etc. needed for acking
-    # @param [Bunny::MessageProperties] properties Contains priority information incase we need to requeue
-    # @param [Parameters] payload The job name and parameters the job requires
-    def initialize(delivery_info, properties, params)
-      self.delivery_info = delivery_info
-      self.properties = properties
-      self.params = params
+    # @param [Message] incoming_message Contains delivery information such as the delivery_tag
+    def initialize(incoming_message)
+      self.incoming_message = incoming_message
     end
 
     # Call the appropriate handling method for the result
@@ -40,14 +35,24 @@ module Leveret
     # Reject the message and reinsert it onto it's queue
     def requeue
       log.debug "[#{delivery_tag}] Requeueing message"
-      channel.requeue(delivery_tag, true)
+      channel.reject(delivery_tag, true)
     end
 
     # Acknowledge the message, but publish it onto the delay queue for execution later
     def delay
       log.debug ["[#{delivery_tag}] Delaying message"]
       channel.acknowledge(delivery_tag)
-      delay_queue.republish(delivery_info, properties, params)
+      delay_queue.republish(incoming_message)
+    end
+
+    private
+
+    def channel
+      incoming_message.delivery_info.channel
+    end
+
+    def delivery_tag
+      incoming_message.delivery_info.delivery_tag
     end
   end
 end
