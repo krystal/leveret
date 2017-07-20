@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'securerandom'
 
 describe Leveret::Queue do
   let(:queue) { Leveret::Queue.new('test') }
